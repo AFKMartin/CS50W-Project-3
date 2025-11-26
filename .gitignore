@@ -1,0 +1,9 @@
+# Ignore Django database
+db.sqlite3
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
