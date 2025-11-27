@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
+  // Handle the submission
+  document.querySelector('#compose-form').onsubmit = send_email;
+
   // By default, load the inbox
   load_mailbox('inbox');
 });
@@ -22,6 +25,22 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 }
 
+function view_email(id) {
+  // Show email details
+  fetch(`/emails/${id}`)
+    .then(response => response.json())
+    .then(email => {
+      document.querySelector('#emails-view').innerHTML = `
+        <h3>${email.subject}</h3>
+        <p><strong>From:</strong> ${email.sender}</p>
+        <p><strong>To:</strong> ${email.recipients}</p>
+        <p><strong>Timestamp:</strong> ${email.timestamp}</p>
+        <hr>
+        <p>${email.body}</p>
+      `;
+    });
+}
+
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
@@ -30,4 +49,54 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  // Search emails fro the mailbox
+  fetch(`/emails/${mailbox}`)
+  .then(response => response.json())
+  .then(emails => {
+    emails.forEach(email => {
+        const email_div = document.createElement('div');
+        email_div.className = 'email-item';
+        email_div.innerHTML = `
+          <strong>${email.sender}</strong> - ${email.subject}
+          <span style="float: right;">${email.timestamp}</span>
+        `;
+
+        email_div.style.border = '1px solid #ccc';
+        email_div.style.padding = '10px';
+        email_div.style.margin = '5px';
+        email_div.style.backgroundColor = email.read ? '#f0f0f0' : 'white';
+
+        // Add click event
+        email_div.addEventListener('click', () => view_email(email.id));
+        document.querySelector('#emails-view').append(email_div);
+    });
+  });
+}
+
+function send_email(event) {
+  event.preventDefault();
+
+  // Collect form data
+  const recipients = document.querySelector('#compose-recipients').value;
+  const subject = document.querySelector('#compose-subject').value;
+  const body = document.querySelector('#compose-body').value;
+  
+  // Send POST request
+  fetch('/emails', {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      recipients: recipients,
+      subject: subject,
+      body: body
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    console.log(result);   // Debugging
+    load_mailbox('sent');  // Redirect to Sent mailbox
+  });
 }
