@@ -26,11 +26,18 @@ function compose_email() {
 }
 
 function view_email(id) {
+  // Mark email as read
+  fetch(`/emails/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ read: true })
+  });
+
   // Show email details
   fetch(`/emails/${id}`)
     .then(response => response.json())
     .then(email => {
-      document.querySelector('#emails-view').innerHTML = `
+      const view = document.querySelector('#emails-view');
+      view.innerHTML = `
         <h3>${email.subject}</h3>
         <p><strong>From:</strong> ${email.sender}</p>
         <p><strong>To:</strong> ${email.recipients}</p>
@@ -38,6 +45,20 @@ function view_email(id) {
         <hr>
         <p>${email.body}</p>
       `;
+
+      // Archive button
+      const archive_button = document.createElement('button');
+      archive_button.className = 'btn btn-sm btn-outline-primary';
+      archive_button.innerText = email.archived ? 'Unarchive' : 'Archive';
+      archive_button.addEventListener('click', () => {
+        fetch(`/emails/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ archived: !email.archived })
+        })
+        .then(() => load_mailbox('inbox'));  // reload inbox after action
+      });
+
+      view.append(archive_button);
     });
 }
 
@@ -55,6 +76,7 @@ function load_mailbox(mailbox) {
   .then(response => response.json())
   .then(emails => {
     emails.forEach(email => {
+        // Div for each email
         const email_div = document.createElement('div');
         email_div.className = 'email-item';
         email_div.innerHTML = `
@@ -66,6 +88,7 @@ function load_mailbox(mailbox) {
         email_div.style.padding = '10px';
         email_div.style.margin = '5px';
         email_div.style.backgroundColor = email.read ? '#f0f0f0' : 'white';
+        email_div.style.cursor = 'pointer';
 
         // Add click event
         email_div.addEventListener('click', () => view_email(email.id));
