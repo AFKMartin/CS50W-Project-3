@@ -26,6 +26,11 @@ function compose_email() {
 }
 
 function view_email(id) {
+  // Hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'block';
+  
   // Mark email as read
   fetch(`/emails/${id}`, {
     method: 'PUT',
@@ -36,7 +41,7 @@ function view_email(id) {
   fetch(`/emails/${id}`)
     .then(response => response.json())
     .then(email => {
-      const view = document.querySelector('#emails-view');
+      const view = document.querySelector('#email-view');
       view.innerHTML = `
         <h3>${email.subject}</h3>
         <p><strong>From:</strong> ${email.sender}</p>
