@@ -64,6 +64,20 @@ function view_email(id) {
       });
 
       view.append(archive_button);
+
+      // Reply button
+      const reply_button = document.createElement('button');
+      reply_button.className = 'btn btn-sm btn-outline-success ml-2';
+      reply_button.innerText = 'Reply';
+      reply_button.addEventListener('click', ()=> {
+        compose_email();
+
+        // Prefill fields
+        document.querySelector('#compose-recipients').value = email.sender;
+        document.querySelector('#compose-subject').value = email.subject.startsWith("Re:") ? email.subject : `Re: ${email.subject}`;
+        document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote:\n${email.body}\n\n`;
+      });
+      view.append(reply_button);
     });
 }
 
